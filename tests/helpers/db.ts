@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import * as Prisma from "@prisma/client";
 import { execSync } from "child_process";
 import { existsSync, unlinkSync } from "fs";
 import { resolve } from "path";
@@ -6,7 +6,7 @@ import { resolve } from "path";
 const TEST_DB_PATH = resolve(import.meta.dir, "../../test.db");
 const PRISMA_BIN = resolve(import.meta.dir, "../../node_modules/.bin/prisma");
 
-let db: PrismaClient | null = null;
+let db: any = null;
 
 export async function setupTestDb() {
   if (existsSync(TEST_DB_PATH)) {
@@ -19,6 +19,8 @@ export async function setupTestDb() {
     cwd: resolve(import.meta.dir, "../.."),
     stdio: "inherit",
   });
+
+  const PrismaClient = (Prisma as any).PrismaClient;
 
   db = new PrismaClient({
     datasources: {
