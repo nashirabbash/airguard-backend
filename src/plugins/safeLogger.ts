@@ -38,7 +38,7 @@ export function safeLogger(options: LoggerOptions = {}) {
     .derive({ as: "global" }, ({ headers }) => ({
       startTime: performance.now(),
       clientIp: getIp(headers as HeaderMap, ipHeaders),
-      errorLogged: false,
+      errorLogged: false as boolean,
     }))
     .onAfterResponse({ as: "global" }, (ctx) => {
       if (ctx.errorLogged) {
