@@ -5,6 +5,7 @@ import { telemetryRoute } from "./routes/telemetry.route";
 import swagger from "@elysiajs/swagger";
 import openapi from "@elysia/openapi";
 import { createMessageRoute } from "./models/messageRoute";
+import { safeLogger } from "./plugins/safeLogger";
 
 // Function to get process uptime with error handling
 function getProcessUptime() {
@@ -20,6 +21,7 @@ function getProcessUptime() {
 const app = new Elysia()
   .use(openapi())
   .use(swagger())
+  .use(safeLogger())
   .group("/api", (app) =>
     app
       .get("/health", ({ set }) => {
