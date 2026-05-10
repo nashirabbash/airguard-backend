@@ -1,32 +1,19 @@
 import { db } from "../models/db";
 import { errorMessage } from "../models/errorMessage";
+import {
+  createUser,
+  findUser,
+  getUserData,
+  updateLastLogin,
+} from "../repositories/auth.repositories";
 
 // function check if user already exists
 async function checkExistingUser(username: string) {
-  const existingUser = await db.users.findUnique({
-    where: { username },
-  });
+  const existingUser = await findUser(username);
 
   if (existingUser) {
     throw new Error(errorMessage.USER_ALREADY_EXISTS);
   }
-}
-
-// function to hash password using bcrypt
-function encryptPassword(password: string) {
-  return Bun.password.hash(password, "bcrypt");
-}
-
-// function to create a new user in the database
-async function createUser(username: string, password: string) {
-  const user = await db.users.create({
-    data: {
-      username,
-      password: await encryptPassword(password),
-      createdAt: new Date(),
-    },
-  });
-  return user;
 }
 
 // function to extract token from the Authorization header
@@ -42,13 +29,6 @@ function getTokenFromAuthorization(authorization?: string) {
   }
 
   return authorization;
-}
-
-// function to find user by username
-async function findUser(username: string) {
-  return await db.users.findUnique({
-    where: { username },
-  });
 }
 
 // function to get user by credentials and verify password
@@ -73,14 +53,6 @@ async function verifyPassword(password: string, passwordHash: string) {
   } catch {
     return false;
   }
-}
-
-// function to update the last login time of the user
-async function updateLastLogin(userId: number) {
-  await db.users.update({
-    where: { id: userId },
-    data: { lastLogin: new Date() },
-  });
 }
 
 // function to revoke a token and remove it from the active tokens map
@@ -108,18 +80,6 @@ function getAuthenticatedUserId(
   }
 
   return { token, userId };
-}
-
-// function to get user data by user ID
-async function getUserData(userId: number) {
-  return await db.users.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      username: true,
-      lastLogin: true,
-    },
-  });
 }
 
 // function to handle missing authenticated user records

@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import { db } from "../models/db";
 import { errorMessage } from "../models/errorMessage";
+import {
+  createSensorReadingRecord,
+  findDeviceById,
+  getMostRecentSensorReading,
+} from "../repositories/realtimeData.repositories";
 
 // type definition for the expected structure of incoming sensor reading messages from devices
 type SensorReadingMessage = {
@@ -89,13 +94,6 @@ function isSensorReading(message: any): message is SensorReadingMessage {
   return message.type === "sensor_reading";
 }
 
-// function to find a device by its ID in the database
-function findDeviceById(deviceId: string) {
-  return db.deviceConfig.findUnique({
-    where: { deviceId },
-  });
-}
-
 // function to check if device found in the database, if not throw an error
 function deviceNotFound(device: any) {
   if (!device) {
@@ -133,35 +131,7 @@ function validateTokenHash(token: string, deviceTokenHash: string) {
   }
 }
 
-// function to create a new sensor reading record in the database with the provided data from the incoming message and return the created record
-async function createSensorReadingRecord(data: {
-  deviceId: string;
-  timestamp: string;
-  temperature: number;
-  humidity: number;
-  mq135Value: number;
-  roomStatus: RoomStatus;
-}) {
-  return db.sensorReadings.create({
-    data: {
-      deviceId: data.deviceId,
-      timestamp: new Date(data.timestamp),
-      temperature: data.temperature,
-      humidity: data.humidity,
-      mq135Value: data.mq135Value,
-      roomStatus: data.roomStatus,
-    },
-  });
-}
-
-// fetch the most recent sensor reading from the database
-async function getMostRecentSensorReading() {
-  return db.sensorReadings.findFirst({
-    orderBy: { timestamp: "desc" },
-  });
-}
-
-export class RealtimeDataService {
+class RealtimeDataService {
   // function to compute the room status based on the sensor readings and device configuration, returning DANGER if any reading is in the danger zone, WARNING if any reading is in the warning zone, and NORMAL otherwise
   private computeRoomStatus(params: {
     temperature: number;
@@ -236,3 +206,5 @@ export class RealtimeDataService {
     };
   }
 }
+
+export { RealtimeDataService, RoomStatus };

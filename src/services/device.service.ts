@@ -1,93 +1,28 @@
-import { db } from "../models/db";
 import { createHash } from "node:crypto";
 import { errorMessage } from "../models/errorMessage";
+import {
+  createDevice,
+  deleteDevice,
+  DeviceConfigInput,
+  existingDevice,
+  getDeviceByUserId,
+  updateDevice,
+} from "../repositories/device.repositories";
 
 // register device input type
-export type RegisterDeviceInput = {
+type RegisterDeviceInput = {
   deviceId: string;
   userId: number;
 } & DeviceConfigInput;
 
 // update device input type
-export type UpdateDeviceInput = {
+type UpdateDeviceInput = {
   deviceId: string;
 } & DeviceConfigInput;
-
-// device config input type
-type DeviceConfigInput = {
-  tempUnsafeHigh: number;
-  tempUnsafeLow: number;
-  tempWarningHigh: number;
-  tempWarningLow: number;
-  humidityUnsafeHigh: number;
-  humidityUnsafeLow: number;
-  humidityWarningHigh: number;
-  humidityWarningLow: number;
-  mq135BaselineRuntimeOnly: number;
-};
-
-// function check existing device
-async function existingDevice(deviceId: string) {
-  return await db.deviceConfig.findUnique({
-    where: { deviceId },
-  });
-}
 
 // function create device token hash
 function createDeviceTokenHash(deviceId: string) {
   return createHash("sha256").update(deviceId).digest("hex");
-}
-
-// function create device
-async function createDevice(params: RegisterDeviceInput) {
-  return await db.deviceConfig.create({
-    data: {
-      deviceId: params.deviceId,
-      deviceTokenHash: createDeviceTokenHash(params.deviceId),
-      userId: params.userId,
-      tempUnsafeHigh: params.tempUnsafeHigh,
-      tempUnsafeLow: params.tempUnsafeLow,
-      tempWarningHigh: params.tempWarningHigh,
-      tempWarningLow: params.tempWarningLow,
-      humidityUnsafeHigh: params.humidityUnsafeHigh,
-      humidityUnsafeLow: params.humidityUnsafeLow,
-      humidityWarningHigh: params.humidityWarningHigh,
-      humidityWarningLow: params.humidityWarningLow,
-      mq135BaselineRuntimeOnly: params.mq135BaselineRuntimeOnly,
-    },
-  });
-}
-
-// function update device
-async function updateDevice(params: UpdateDeviceInput) {
-  return await db.deviceConfig.update({
-    where: { deviceId: params.deviceId },
-    data: {
-      tempUnsafeHigh: params.tempUnsafeHigh,
-      tempUnsafeLow: params.tempUnsafeLow,
-      tempWarningHigh: params.tempWarningHigh,
-      tempWarningLow: params.tempWarningLow,
-      humidityUnsafeHigh: params.humidityUnsafeHigh,
-      humidityUnsafeLow: params.humidityUnsafeLow,
-      humidityWarningHigh: params.humidityWarningHigh,
-      humidityWarningLow: params.humidityWarningLow,
-      mq135BaselineRuntimeOnly: params.mq135BaselineRuntimeOnly,
-    },
-  });
-}
-
-// function delete device
-async function deleteDevice(deviceId: string) {
-  await db.deviceConfig.delete({
-    where: { deviceId },
-  });
-}
-
-// function get device by userId
-async function getDeviceByUserId(userId: number) {
-  return await db.deviceConfig.findMany({
-    where: { userId },
-  });
 }
 
 // function check existing device and throw error if exists
@@ -98,7 +33,7 @@ async function checkExistingDevice(deviceId: string) {
   }
 }
 
-export class DeviceService {
+class DeviceService {
   // register device
   async registerDevice({
     deviceId,
@@ -170,3 +105,10 @@ export class DeviceService {
     return device;
   }
 }
+
+export {
+  DeviceService,
+  createDeviceTokenHash,
+  RegisterDeviceInput,
+  UpdateDeviceInput,
+};
