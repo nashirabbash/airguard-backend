@@ -2,11 +2,20 @@
   "name": "app",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "bun test",
+    "test:unit": "bun test tests/unit",
+    "test:integration": "bun test tests/integration",
+    "test:coverage": "bun test --coverage",
+    "test:ci": "bun test --coverage",
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@prisma/client": "^7.8.0",
+    "elysia": "^1.4.28",
+    "prisma": "^7.8.0",
+    "prisma-adapter-bun-sqlite": "^0.8.0",
+    "prismabox": "^1.1.26",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "bun-types": "latest"
