@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
-import { db } from "../models/db";
 import { errorMessage } from "../models/errorMessage";
 import {
   createSensorReadingRecord,
   findDeviceById,
   getMostRecentSensorReading,
 } from "../repositories/realtimeData.repositories";
+import { RoomStatus } from "../helper/utils";
 
 // type definition for the expected structure of incoming sensor reading messages from devices
 type SensorReadingMessage = {
@@ -17,9 +17,6 @@ type SensorReadingMessage = {
   humidity: number;
   mq135_value: number;
 };
-
-// type definition for the possible room status values based on sensor readings and defined thresholds in the device configuration
-type RoomStatus = "NORMAL" | "WARNING" | "DANGER";
 
 // function to check if the sensor readings indicate a DANGER status based on the defined thresholds in the device configuration
 function DANGER({
@@ -207,4 +204,4 @@ class RealtimeDataService {
   }
 }
 
-export { RealtimeDataService, RoomStatus };
+export { RealtimeDataService };

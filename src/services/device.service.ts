@@ -8,17 +8,7 @@ import {
   getDeviceByUserId,
   updateDevice,
 } from "../repositories/device.repositories";
-
-// register device input type
-type RegisterDeviceInput = {
-  deviceId: string;
-  userId: number;
-} & DeviceConfigInput;
-
-// update device input type
-type UpdateDeviceInput = {
-  deviceId: string;
-} & DeviceConfigInput;
+import { RegisterDeviceInput, UpdateDeviceInput } from "../helper/utils";
 
 // function create device token hash
 function createDeviceTokenHash(deviceId: string) {
@@ -106,9 +96,4 @@ class DeviceService {
   }
 }
 
-export {
-  DeviceService,
-  createDeviceTokenHash,
-  RegisterDeviceInput,
-  UpdateDeviceInput,
-};
+export { DeviceService, createDeviceTokenHash };
