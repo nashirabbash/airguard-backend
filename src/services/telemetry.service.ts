@@ -18,13 +18,19 @@ function buildCsv(readings: Array<any>) {
 // service class to handle telemetry-related operations
 export class TelemetryService {
   // method to get sensor readings for a device within a time range
-  async getReadings(deviceId: string, start: Date, end: Date) {
-    const data = await findManySensorReadings(deviceId, start, end);
-    return data;
+  getReadings(deviceId: string, start: Date, end: Date) {
+    return findManySensorReadings(deviceId, start, end);
   }
   // method to export sensor readings to CSV format
-  async exportToCSV(deviceId: string, start: Date, end: Date) {
-    const readings = await this.getReadings(deviceId, start, end);
-    return buildCsv(readings);
+  exportToCSV(deviceId: string, start: Date, end: Date) {
+    return this.getReadings(deviceId, start, end).then((readings) =>
+      buildCsv(readings)
+    );
   }
+  
+  // Helpers for testing logic
+  getDeviceFilter(deviceId: string) { return { deviceId }; }
+  getDateFilter(start: Date, end: Date) { return { start, end }; }
+  isValidDate(d: Date) { return !isNaN(d.getTime()); }
+  formatDate(d: Date) { return d.toISOString(); }
 }
