@@ -23,6 +23,14 @@ async function checkExistingDevice(deviceId: string) {
   }
 }
 
+// function check device exists and throw error if not found
+async function requireDevice(deviceId: string) {
+  const device = await existingDevice(deviceId);
+  if (!device) {
+    throw new Error(errorMessage.DEVICE_NOT_FOUND);
+  }
+}
+
 class DeviceService {
   // register device
   async registerDevice({
@@ -69,6 +77,7 @@ class DeviceService {
     humidityWarningLow,
     mq135BaselineRuntimeOnly,
   }: UpdateDeviceInput) {
+    await requireDevice(deviceId);
     const updatedDevice = await updateDevice({
       deviceId,
       tempUnsafeHigh,
@@ -86,6 +95,7 @@ class DeviceService {
 
   // delete device
   async deleteDevice(deviceId: string) {
+    await requireDevice(deviceId);
     await deleteDevice(deviceId);
   }
 

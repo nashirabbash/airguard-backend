@@ -79,10 +79,12 @@ const deviceRoute = new Elysia().group("/device", (app) =>
           );
         } catch (error) {
           set.status =
-            error instanceof Error &&
-            error.message === errorMessage.UNAUTHORIZED
+            error instanceof Error && error.message === errorMessage.UNAUTHORIZED
               ? 401
-              : 400;
+              : error instanceof Error &&
+                  error.message === errorMessage.DEVICE_NOT_FOUND
+                ? 404
+                : 400;
 
           return createMessageRoute(
             false,
@@ -137,7 +139,11 @@ const deviceRoute = new Elysia().group("/device", (app) =>
 
         return createMessageRoute(true, 200, "Device deleted successfully");
       } catch (error) {
-        set.status = 400;
+        set.status =
+          error instanceof Error &&
+          error.message === errorMessage.DEVICE_NOT_FOUND
+            ? 404
+            : 400;
 
         return createMessageRoute(
           false,

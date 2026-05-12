@@ -1,0 +1,473 @@
+{
+  "info": {
+    "name": "AirGuard Backend API",
+    "description": "Scenario-based testing collection. Recommended run order: Server Readiness -> New User Onboarding -> Device Provisioning -> Sensor Reading Scenarios -> Monitoring and Reporting -> Cleanup.\n\nNote: Sensor ingestion uses WebSocket (ws://localhost:3000/ws/ingest), not HTTP. Use Postman WebSocket tab or wscat for those scenario docs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "AUTH_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "USER_ID",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "DEVICE_ID",
+      "value": "device-001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Server Readiness Scenario",
+      "description": "Verify the API is reachable before running authenticated scenarios.",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/health",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Telemetry Current (ping)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/telemetry/current",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "telemetry",
+                "current"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. New User Onboarding Scenario",
+      "description": "Create a test account, authenticate, and store AUTH_TOKEN and USER_ID for the next scenarios.",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/auth/signup",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('AUTH_TOKEN', json.data.token);",
+                  "}",
+                  "if (json.data && json.data.user && json.data.user.id) {",
+                  "  pm.collectionVariables.set('USER_ID', String(json.data.user.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/auth/login",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/auth/users/{{USER_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "users",
+                "{{USER_ID}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Device Provisioning Scenario",
+      "description": "Register a device for the authenticated user, update its thresholds, and verify it appears in the user device list.",
+      "item": [
+        {
+          "name": "Register Device (all fields required)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{DEVICE_ID}}\",\n  \"tempUnsafeHigh\": 40,\n  \"tempUnsafeLow\": 5,\n  \"tempWarningHigh\": 35,\n  \"tempWarningLow\": 10,\n  \"humidityUnsafeHigh\": 80,\n  \"humidityUnsafeLow\": 20,\n  \"humidityWarningHigh\": 75,\n  \"humidityWarningLow\": 25,\n  \"mq135BaselineRuntimeOnly\": 410\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/device/register",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "device",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Device Config",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tempUnsafeHigh\": 45,\n  \"tempUnsafeLow\": 5,\n  \"tempWarningHigh\": 38,\n  \"tempWarningLow\": 10,\n  \"humidityUnsafeHigh\": 85,\n  \"humidityUnsafeLow\": 15,\n  \"humidityWarningHigh\": 78,\n  \"humidityWarningLow\": 22,\n  \"mq135BaselineRuntimeOnly\": 420\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/device/{{DEVICE_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "device",
+                "{{DEVICE_ID}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Devices by User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/device/user/{{USER_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "device",
+                "user",
+                "{{USER_ID}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Normal Air Quality Scenario",
+      "description": "WebSocket message example for a sensor reading that should produce NORMAL roomStatus.",
+      "item": [
+        {
+          "name": "[WS DOC] Normal Reading",
+          "request": {
+            "method": "GET",
+            "description": "WebSocket endpoint: ws://localhost:3000/ws/ingest\n\nSend this JSON as a message:\n{\n  \"deviceId\": \"device-001\",\n  \"deviceToken\": \"your-raw-device-token\",\n  \"temperature\": 22,\n  \"humidity\": 55,\n  \"mq135Value\": 380\n}\n\nExpected roomStatus: NORMAL",
+            "url": {
+              "raw": "ws://localhost:3000/ws/ingest",
+              "protocol": "ws",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "ws",
+                "ingest"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Warning Air Quality Scenario",
+      "description": "WebSocket message example for a reading that should cross warning thresholds.",
+      "item": [
+        {
+          "name": "[WS DOC] Warning Reading — High Temp",
+          "request": {
+            "method": "GET",
+            "description": "WebSocket endpoint: ws://localhost:3000/ws/ingest\n\nSend this JSON:\n{\n  \"deviceId\": \"device-001\",\n  \"deviceToken\": \"your-raw-device-token\",\n  \"temperature\": 36,\n  \"humidity\": 55,\n  \"mq135Value\": 380\n}\n\nExpected roomStatus: WARNING (temp >= tempWarningHigh 35)",
+            "url": {
+              "raw": "ws://localhost:3000/ws/ingest",
+              "protocol": "ws",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "ws",
+                "ingest"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Danger Air Quality Scenarios",
+      "description": "WebSocket message examples for readings that should cross danger thresholds.",
+      "item": [
+        {
+          "name": "[WS DOC] Danger Reading — High MQ135",
+          "request": {
+            "method": "GET",
+            "description": "WebSocket endpoint: ws://localhost:3000/ws/ingest\n\nSend this JSON:\n{\n  \"deviceId\": \"device-001\",\n  \"deviceToken\": \"your-raw-device-token\",\n  \"temperature\": 22,\n  \"humidity\": 55,\n  \"mq135Value\": 450\n}\n\nExpected roomStatus: DANGER (mq135Value >= baseline 410)",
+            "url": {
+              "raw": "ws://localhost:3000/ws/ingest",
+              "protocol": "ws",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "ws",
+                "ingest"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[WS DOC] Danger Reading — High Temp",
+          "request": {
+            "method": "GET",
+            "description": "WebSocket endpoint: ws://localhost:3000/ws/ingest\n\nSend this JSON:\n{\n  \"deviceId\": \"device-001\",\n  \"deviceToken\": \"your-raw-device-token\",\n  \"temperature\": 42,\n  \"humidity\": 55,\n  \"mq135Value\": 380\n}\n\nExpected roomStatus: DANGER (temp >= tempUnsafeHigh 40)",
+            "url": {
+              "raw": "ws://localhost:3000/ws/ingest",
+              "protocol": "ws",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "ws",
+                "ingest"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Monitoring and Reporting Scenario",
+      "description": "Query historical readings and export the same time range as CSV after sensor data has been ingested.",
+      "item": [
+        {
+          "name": "Get Readings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/telemetry/readings?deviceId={{DEVICE_ID}}&start=2026-05-01T00:00:00Z&end=2026-05-12T23:59:59Z",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "telemetry",
+                "readings"
+              ],
+              "query": [
+                {
+                  "key": "deviceId",
+                  "value": "{{DEVICE_ID}}"
+                },
+                {
+                  "key": "start",
+                  "value": "2026-05-01T00:00:00Z"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-05-12T23:59:59Z"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Readings (CSV)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/telemetry/readings/export?deviceId={{DEVICE_ID}}&start=2026-05-01T00:00:00Z&end=2026-05-12T23:59:59Z",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "telemetry",
+                "readings",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "deviceId",
+                  "value": "{{DEVICE_ID}}"
+                },
+                {
+                  "key": "start",
+                  "value": "2026-05-01T00:00:00Z"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-05-12T23:59:59Z"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Cleanup Scenario",
+      "description": "Remove the test device and end the authenticated session.",
+      "item": [
+        {
+          "name": "Delete Device",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/device/delete?deviceId={{DEVICE_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "device",
+                "delete"
+              ],
+              "query": [
+                {
+                  "key": "deviceId",
+                  "value": "{{DEVICE_ID}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{AUTH_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/auth/logout",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

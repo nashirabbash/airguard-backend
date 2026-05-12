@@ -97,6 +97,8 @@ describe("DeviceService", () => {
 
   describe("updateDevice", () => {
     it("should update device config correctly", async () => {
+      mockState.findUniqueReturn = fakeDeviceConfig;
+
       const updateInput = {
         deviceId: "device-1",
         tempUnsafeHigh: 60,
@@ -127,6 +129,8 @@ describe("DeviceService", () => {
 
   describe("deleteDevice", () => {
     it("should delete device successfully", async () => {
+      mockState.findUniqueReturn = fakeDeviceConfig;
+
       await expect(service.deleteDevice("device-1")).resolves.toBeUndefined();
     });
   });

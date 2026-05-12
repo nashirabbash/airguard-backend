@@ -145,7 +145,7 @@ describe("Device Routes Integration Tests", () => {
       expect(resBody.data.tempUnsafeHigh).toBe(60);
     });
 
-    it("should return 400 for unknown deviceId", async () => {
+    it("should return 404 for unknown deviceId", async () => {
       const response = await app.handle(
         new Request("http://localhost/device/unknown-device", {
           method: "PUT",
@@ -157,7 +157,7 @@ describe("Device Routes Integration Tests", () => {
         })
       );
 
-      expect(response.status).toBe(400); 
+      expect(response.status).toBe(404); 
     });
 
     it("should return 401 when no auth is provided", async () => {
@@ -214,13 +214,13 @@ describe("Device Routes Integration Tests", () => {
       expect(response.status).toBe(200);
     });
 
-    it("should return 400 when deleting non-existent device", async () => {
+    it("should return 404 when deleting non-existent device", async () => {
       const response = await app.handle(
         new Request("http://localhost/device/delete?deviceId=does-not-exist", {
           method: "DELETE"
         })
       );
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(404);
     });
   });
 });
