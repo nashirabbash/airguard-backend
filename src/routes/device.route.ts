@@ -14,9 +14,6 @@ const deviceRoute = new Elysia().group("/device", (app) =>
       async ({ body, headers, set }) => {
         try {
           const user = await authService.me(headers.authorization);
-          if (!user) {
-            throw new Error(errorMessage.UNAUTHORIZED);
-          }
 
           const data = await deviceService.registerDevice({
             ...body,
@@ -63,10 +60,15 @@ const deviceRoute = new Elysia().group("/device", (app) =>
       },
     )
     .put(
-      "/update",
-      async ({ body, set }) => {
+      "/:deviceId",
+      async ({ params, body, headers, set }) => {
         try {
-          const data = await deviceService.updateDevice(body);
+          const user = await authService.me(headers.authorization);
+
+          const data = await deviceService.updateDevice({
+            ...body,
+            deviceId: params.deviceId,
+          });
           set.status = 200;
 
           return createMessageRoute(
@@ -76,7 +78,11 @@ const deviceRoute = new Elysia().group("/device", (app) =>
             data,
           );
         } catch (error) {
-          set.status = 400;
+          set.status =
+            error instanceof Error &&
+            error.message === errorMessage.UNAUTHORIZED
+              ? 401
+              : 400;
 
           return createMessageRoute(
             false,
@@ -87,7 +93,6 @@ const deviceRoute = new Elysia().group("/device", (app) =>
       },
       {
         body: z.object({
-          deviceId: z.string(),
           tempUnsafeHigh: z.number(),
           tempUnsafeLow: z.number(),
           tempWarningHigh: z.number(),
@@ -102,9 +107,11 @@ const deviceRoute = new Elysia().group("/device", (app) =>
     )
     .get("/user/:userId", async ({ params, set }) => {
       try {
-        const data = await deviceService.getDeviceByUserId(
-          Number(params.userId),
-        );
+        const userId = Number(params.userId);
+        if (isNaN(userId)) {
+          throw new Error("Invalid user ID");
+        }
+        const data = await deviceService.getDeviceByUserId(userId);
         set.status = 200;
 
         return createMessageRoute(
