@@ -2,6 +2,8 @@ import { Elysia } from "elysia";
 import authRoute from "./routes/auth.route";
 import deviceRoute from "./routes/device.route";
 import { telemetryRoute } from "./routes/telemetry.route";
+import { realtimeDataRoute } from "./routes/realtimeData.route";
+import { logsRoute } from "./routes/logs.route";
 import swagger from "@elysiajs/swagger";
 import openapi from "@elysia/openapi";
 import { createMessageRoute } from "./models/messageRoute";
@@ -22,6 +24,8 @@ const app = new Elysia()
   .use(openapi())
   .use(swagger())
   .use(safeLogger())
+  .use(realtimeDataRoute)
+  .use(logsRoute)
   .group("/api", (app) =>
     app
       .get("/health", ({ set }) => {

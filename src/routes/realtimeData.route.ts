@@ -1,5 +1,6 @@
 import Elysia from "elysia";
 import { RealtimeDataService } from "../services/realtimeData.service";
+import { logStore } from "../models/logStore";
 
 const realtimeDataService = new RealtimeDataService();
 
@@ -24,6 +25,15 @@ export const realtimeDataRoute = new Elysia({ prefix: "/ws" })
       try {
         const message =
           typeof rawMessage === "string" ? JSON.parse(rawMessage) : rawMessage;
+
+        if (message.type === "log_dump") {
+          const entries: string[] = typeof message.logs === "string"
+            ? message.logs.split("\n").filter(Boolean)
+            : [];
+          logStore.set(message.device_id, entries);
+          ws.send(JSON.stringify({ type: "log_dump_ack", ok: true, count: entries.length }));
+          return;
+        }
 
         const result = await realtimeDataService.ingestSensorReading(message);
 
