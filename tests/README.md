@@ -1,6 +1,7 @@
 # Test Structure
 
 Tests split into two categories:
+Tests are organized by five categories:
 
 ## Unit Tests (`tests/unit/`)
 
@@ -17,6 +18,30 @@ Route-layer tests with **real SQLite test.db**. Full end-to-end flow via Elysia'
 Setup: `beforeAll(() => setupTestDb())` / `afterAll(() => teardownTestDb())`
 
 Run: `bun test:integration`
+
+## E2E Tests (`tests/e2e/`)
+
+API workflow tests that chain multiple modules in one scenario (e.g. auth + device flow).
+
+Run: `bun test:e2e`
+
+## System Tests (`tests/system/`)
+
+System-level contract checks across API surface (health + validation behavior).
+
+Run: `bun test:system`
+
+## Performance Tests (`tests/performance/`)
+
+Basic latency guardrails for critical endpoints. Thresholds are intentionally loose for local/CI variance.
+
+Run: `bun test:performance`
+
+## Run Everything (Interactive Output)
+
+Run all categories with Bun's `spec` reporter in one command:
+
+`bun run test:all`
 
 ## Adding New Tests
 
