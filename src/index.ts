@@ -8,6 +8,7 @@ import swagger from "@elysiajs/swagger";
 import openapi from "@elysia/openapi";
 import { createMessageRoute } from "./models/messageRoute";
 import { safeLogger } from "./plugins/safeLogger";
+import { logger } from "./plugins/logger";
 
 // Function to get process uptime with error handling
 function getProcessUptime() {
@@ -56,6 +57,10 @@ const app = new Elysia()
   )
   .listen(3000);
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,
-);
+logger.info({
+  event: "server:start",
+  hostname: app.server?.hostname,
+  port: app.server?.port,
+  logLevel: process.env.LOG_LEVEL ?? "trace",
+  nodeEnv: process.env.NODE_ENV ?? "development",
+});
